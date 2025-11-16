@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\DotNet.Debug.DAP\DotNet.Debug.DAP.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+
+    <!-- .NET Tool Configuration -->
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-debug-mcp</ToolCommandName>
+    <PackageId>DotNet.Debug.MCP</PackageId>
+    <Version>2.0.0</Version>
+    <Authors>Codetana Research</Authors>
+    <Description>MCP server for LLM-driven .NET debugging using NetCoreDbg and Debug Adapter Protocol</Description>
+    <PackageProjectUrl>https://github.com/brendankowitz/dotnet-debug-mcp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/brendankowitz/dotnet-debug-mcp</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageTags>mcp;debugging;netcoredbg;dap;llm;ai</PackageTags>
+  </PropertyGroup>
+
+</Project>
