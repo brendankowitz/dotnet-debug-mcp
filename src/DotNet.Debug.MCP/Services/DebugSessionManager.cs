@@ -69,6 +69,15 @@ public class DebugSessionManager : IDisposable
                 session.HasExited = true;
             };
 
+            session.Client.Output += (s, e) =>
+            {
+                if (e.Body != null)
+                {
+                    var category = e.Body.Category ?? "console";
+                    session.AddOutput(category, e.Body.Output);
+                }
+            };
+
             // Initialize
             var capabilities = await session.Client.InitializeAsync(cancellationToken: cancellationToken);
             session.Capabilities = capabilities;
@@ -204,6 +213,9 @@ public class DebugSessionManager : IDisposable
 /// </summary>
 public class DebugSession
 {
+    private readonly List<OutputLine> _outputLines = new();
+    private readonly object _outputLock = new();
+
     public string SessionId { get; set; } = string.Empty;
     public string Program { get; set; } = string.Empty;
     public DAPClient? Client { get; set; }
@@ -215,4 +227,51 @@ public class DebugSession
     public int? ExitCode { get; set; }
     public string? LastStopReason { get; set; }
     public int? LastStopThreadId { get; set; }
+
+    /// <summary>
+    /// Add output line from the debugged program
+    /// </summary>
+    public void AddOutput(string category, string text)
+    {
+        lock (_outputLock)
+        {
+            _outputLines.Add(new OutputLine
+            {
+                Timestamp = DateTime.UtcNow,
+                Category = category,
+                Text = text
+            });
+
+            // Keep only last 1000 lines
+            if (_outputLines.Count > 1000)
+            {
+                _outputLines.RemoveAt(0);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Get output lines
+    /// </summary>
+    public List<OutputLine> GetOutput(string category = "all", int maxLines = 100)
+    {
+        lock (_outputLock)
+        {
+            var query = _outputLines.AsEnumerable();
+
+            if (category != "all")
+            {
+                query = query.Where(o => o.Category.Equals(category, StringComparison.OrdinalIgnoreCase));
+            }
+
+            return query.TakeLast(maxLines).ToList();
+        }
+    }
+}
+
+public class OutputLine
+{
+    public DateTime Timestamp { get; set; }
+    public string Category { get; set; } = string.Empty;
+    public string Text { get; set; } = string.Empty;
 }

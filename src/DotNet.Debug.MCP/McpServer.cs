@@ -45,16 +45,27 @@ public class McpServer : IDisposable
     {
         var tools = new ITool[]
         {
+            // Core debugging
             new DebugStartTool(_sessionManager),
+            new StopTool(_sessionManager),
+
+            // Breakpoints
             new SetBreakpointTool(_sessionManager),
+            new SetExceptionBreakpointsTool(_sessionManager),
+            new ListBreakpointsTool(_sessionManager),
+
+            // Execution control
             new ContinueTool(_sessionManager),
             new StepTool(_sessionManager, "over"),
             new StepTool(_sessionManager, "into"),
             new StepTool(_sessionManager, "out"),
+
+            // Inspection
             new EvaluateTool(_sessionManager),
             new GetVariablesTool(_sessionManager),
             new GetStackTraceTool(_sessionManager),
-            new StopTool(_sessionManager)
+            new GetThreadsTool(_sessionManager),
+            new GetOutputTool(_sessionManager)
         };
 
         foreach (var tool in tools)
