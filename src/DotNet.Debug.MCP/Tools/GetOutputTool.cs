@@ -50,7 +50,7 @@ public class GetOutputTool : ITool
         }
     };
 
-    public async Task<ToolResult> ExecuteAsync(object? parameters, CancellationToken cancellationToken = default)
+    public Task<ToolResult> ExecuteAsync(object? parameters, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -62,7 +62,7 @@ public class GetOutputTool : ITool
 
             if (session == null)
             {
-                return ErrorResult($"No session found: {sessionId}");
+                return Task.FromResult(ErrorResult($"No session found: {sessionId}"));
             }
 
             var category = args?.Category ?? "all";
@@ -80,11 +80,11 @@ public class GetOutputTool : ITool
                 output = output.Take(maxLines).ToList()
             };
 
-            return SuccessResult(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+            return Task.FromResult(SuccessResult(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })));
         }
         catch (Exception ex)
         {
-            return ErrorResult($"Failed to get output: {ex.Message}");
+            return Task.FromResult(ErrorResult($"Failed to get output: {ex.Message}"));
         }
     }
 

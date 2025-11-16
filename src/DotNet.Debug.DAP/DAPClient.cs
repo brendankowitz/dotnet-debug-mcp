@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using DotNet.Debug.DAP.Protocol;
 using DotNet.Debug.DAP.Protocol.Messages;
 using DotNet.Debug.DAP.Transport;
+using ExceptionOptions = DotNet.Debug.DAP.Protocol.Messages.ExceptionOptions;
 
 namespace DotNet.Debug.DAP;
 
@@ -111,6 +112,28 @@ public class DAPClient : IDisposable
 
         var response = await SendRequestAsync<SetBreakpointsArguments, SetBreakpointsResponseBody>(
             "setBreakpoints",
+            args,
+            cancellationToken);
+
+        return response.Body?.Breakpoints ?? Array.Empty<Breakpoint>();
+    }
+
+    /// <summary>
+    /// Set exception breakpoints
+    /// </summary>
+    public async Task<Breakpoint[]> SetExceptionBreakpointsAsync(
+        string[] filters,
+        ExceptionOptions[]? exceptionOptions = null,
+        CancellationToken cancellationToken = default)
+    {
+        var args = new SetExceptionBreakpointsArguments
+        {
+            Filters = filters,
+            ExceptionOptions = exceptionOptions
+        };
+
+        var response = await SendRequestAsync<SetExceptionBreakpointsArguments, SetExceptionBreakpointsResponseBody>(
+            "setExceptionBreakpoints",
             args,
             cancellationToken);
 

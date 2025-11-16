@@ -215,18 +215,27 @@ public class DebugSession
 {
     private readonly List<OutputLine> _outputLines = new();
     private readonly object _outputLock = new();
+    private readonly List<TrackedBreakpoint> _breakpoints = new();
+    private readonly object _breakpointLock = new();
 
     public string SessionId { get; set; } = string.Empty;
     public string Program { get; set; } = string.Empty;
     public DAPClient? Client { get; set; }
     public Capabilities? Capabilities { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime LastActivity { get; set; }
     public bool IsLaunched { get; set; }
     public bool IsStopped { get; set; }
     public bool HasExited { get; set; }
     public int? ExitCode { get; set; }
     public string? LastStopReason { get; set; }
     public int? LastStopThreadId { get; set; }
+
+    public DebugSession()
+    {
+        CreatedAt = DateTime.UtcNow;
+        LastActivity = DateTime.UtcNow;
+    }
 
     /// <summary>
     /// Add output line from the debugged program
@@ -267,6 +276,45 @@ public class DebugSession
             return query.TakeLast(maxLines).ToList();
         }
     }
+
+    /// <summary>
+    /// Track a breakpoint
+    /// </summary>
+    public void AddBreakpoint(TrackedBreakpoint breakpoint)
+    {
+        lock (_breakpointLock)
+        {
+            _breakpoints.Add(breakpoint);
+            LastActivity = DateTime.UtcNow;
+        }
+    }
+
+    /// <summary>
+    /// Get all tracked breakpoints
+    /// </summary>
+    public List<TrackedBreakpoint> GetBreakpoints()
+    {
+        lock (_breakpointLock)
+        {
+            return _breakpoints.ToList();
+        }
+    }
+
+    /// <summary>
+    /// Update last activity timestamp
+    /// </summary>
+    public void UpdateActivity()
+    {
+        LastActivity = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Check if session is healthy
+    /// </summary>
+    public bool IsHealthy()
+    {
+        return Client != null && !HasExited;
+    }
 }
 
 public class OutputLine
@@ -274,4 +322,14 @@ public class OutputLine
     public DateTime Timestamp { get; set; }
     public string Category { get; set; } = string.Empty;
     public string Text { get; set; } = string.Empty;
+}
+
+public class TrackedBreakpoint
+{
+    public int? Id { get; set; }
+    public string File { get; set; } = string.Empty;
+    public int Line { get; set; }
+    public bool Verified { get; set; }
+    public string? Condition { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

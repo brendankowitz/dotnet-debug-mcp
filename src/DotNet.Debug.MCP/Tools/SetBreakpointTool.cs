@@ -72,6 +72,30 @@ public class SetBreakpointTool : ITool
                 return ErrorResult($"No active session found: {sessionId}. Use debug_start first.");
             }
 
+            // Canonicalize and validate path
+            string canonicalPath;
+            try
+            {
+                canonicalPath = Path.GetFullPath(args.File);
+                if (!File.Exists(canonicalPath))
+                {
+                    // Try relative to program directory
+                    var programDir = Path.GetDirectoryName(session.Program);
+                    if (programDir != null)
+                    {
+                        var altPath = Path.GetFullPath(Path.Combine(programDir, args.File));
+                        if (File.Exists(altPath))
+                        {
+                            canonicalPath = altPath;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                return ErrorResult($"Invalid file path: {ex.Message}");
+            }
+
             var breakpoint = new SourceBreakpoint
             {
                 Line = args.Line,
@@ -79,7 +103,7 @@ public class SetBreakpointTool : ITool
             };
 
             var breakpoints = await session.Client.SetBreakpointsAsync(
-                args.File,
+                canonicalPath,
                 new[] { breakpoint },
                 cancellationToken);
 
@@ -89,6 +113,18 @@ public class SetBreakpointTool : ITool
             }
 
             var bp = breakpoints[0];
+
+            // Track breakpoint in session
+            session.AddBreakpoint(new TrackedBreakpoint
+            {
+                Id = bp.Id,
+                File = canonicalPath,
+                Line = bp.Line ?? args.Line,
+                Verified = bp.Verified,
+                Condition = args.Condition
+            });
+
+            session.UpdateActivity();
             var result = new
             {
                 success = true,

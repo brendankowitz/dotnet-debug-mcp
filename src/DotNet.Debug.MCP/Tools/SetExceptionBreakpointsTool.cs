@@ -72,28 +72,36 @@ public class SetExceptionBreakpointsTool : ITool
             var filters = args?.Filters ?? new[] { "user-unhandled" };
             var exceptionTypes = args?.ExceptionTypes;
 
-            // Create the request manually since we need custom DAP message
-            var request = new
+            // Create exception options for specific types
+            DotNet.Debug.DAP.Protocol.Messages.ExceptionOptions[]? exceptionOptions = null;
+            if (exceptionTypes != null && exceptionTypes.Length > 0)
             {
-                filters = filters.Select(f => new { filter = f }).ToArray(),
-                exceptionOptions = exceptionTypes?.Select(et => new
+                exceptionOptions = exceptionTypes.Select(et => new DotNet.Debug.DAP.Protocol.Messages.ExceptionOptions
                 {
-                    breakMode = "always",
-                    path = new[]
+                    BreakMode = "always",
+                    Path = new[]
                     {
-                        new { names = new[] { et } }
+                        new DotNet.Debug.DAP.Protocol.Messages.ExceptionPathSegment
+                        {
+                            Names = new[] { et }
+                        }
                     }
-                }).ToArray()
-            };
+                }).ToArray();
+            }
 
-            // Note: This is a simplified version. Full implementation would use
-            // DAP client's SetExceptionBreakpointsAsync method
+            // Use DAP client to set exception breakpoints
+            var breakpoints = await session.Client.SetExceptionBreakpointsAsync(
+                filters,
+                exceptionOptions,
+                cancellationToken);
+
             var result = new
             {
                 success = true,
                 message = $"Exception breakpoints configured",
                 filters,
                 exceptionTypes,
+                breakpointCount = breakpoints.Length,
                 info = new
                 {
                     note = "Exception breakpoints are now active",

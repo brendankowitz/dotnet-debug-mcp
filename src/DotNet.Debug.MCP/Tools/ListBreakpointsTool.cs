@@ -36,7 +36,7 @@ public class ListBreakpointsTool : ITool
         }
     };
 
-    public async Task<ToolResult> ExecuteAsync(object? parameters, CancellationToken cancellationToken = default)
+    public Task<ToolResult> ExecuteAsync(object? parameters, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -48,24 +48,32 @@ public class ListBreakpointsTool : ITool
 
             if (session == null)
             {
-                return ErrorResult($"No session found: {sessionId}");
+                return Task.FromResult(ErrorResult($"No session found: {sessionId}"));
             }
 
-            // Note: This is a simplified version
-            // A full implementation would track breakpoints in the session
+            // Get tracked breakpoints from session
+            var breakpoints = session.GetBreakpoints();
+
             var result = new
             {
                 success = true,
                 sessionId,
-                message = "Breakpoint tracking not yet fully implemented",
-                note = "Use debug_set_breakpoint to set breakpoints. They are active until debug_stop is called."
+                breakpointCount = breakpoints.Count,
+                breakpoints = breakpoints.Select(bp => new
+                {
+                    id = bp.Id,
+                    file = bp.File,
+                    line = bp.Line,
+                    verified = bp.Verified,
+                    condition = bp.Condition
+                }).ToList()
             };
 
-            return SuccessResult(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true }));
+            return Task.FromResult(SuccessResult(JsonSerializer.Serialize(result, new JsonSerializerOptions { WriteIndented = true })));
         }
         catch (Exception ex)
         {
-            return ErrorResult($"Failed to list breakpoints: {ex.Message}");
+            return Task.FromResult(ErrorResult($"Failed to list breakpoints: {ex.Message}"));
         }
     }
 

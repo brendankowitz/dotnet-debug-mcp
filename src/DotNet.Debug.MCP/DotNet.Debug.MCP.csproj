@@ -14,7 +14,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-debug-mcp</ToolCommandName>
     <PackageId>DotNet.Debug.MCP</PackageId>
-    <Version>1.0.0</Version>
+    <Version>2.0.0</Version>
     <Authors>Codetana Research</Authors>
     <Description>MCP server for LLM-driven .NET debugging using NetCoreDbg and Debug Adapter Protocol</Description>
     <PackageProjectUrl>https://github.com/brendankowitz/dotnet-debug-mcp</PackageProjectUrl>
