@@ -97,6 +97,33 @@ dotnet-debug-mcp/
   - Download from: https://github.com/Samsung/netcoredbg/releases
   - Or use the installation script: `./scripts/install-netcoredbg.sh`
 
+## Installation
+
+### Option 1: Install as .NET Global Tool (Recommended)
+
+```bash
+# Install from local package
+dotnet tool install --global --add-source ./src/DotNet.Debug.MCP/bin/Release DotNet.Debug.MCP
+
+# Or install from NuGet (when published)
+dotnet tool install --global DotNet.Debug.MCP
+
+# Verify installation
+dotnet-debug-mcp --version
+```
+
+### Option 2: Run from Source
+
+```bash
+# Clone and build
+git clone https://github.com/brendankowitz/dotnet-debug-mcp.git
+cd dotnet-debug-mcp
+dotnet build
+
+# Run directly
+dotnet run --project src/DotNet.Debug.MCP/DotNet.Debug.MCP.csproj
+```
+
 ## Quick Start
 
 ### 1. Install NetCoreDbg
@@ -151,10 +178,16 @@ dotnet run --project src/TestApp/TestApp.csproj logic    # Off-by-one error
 dotnet run --project src/TestApp/TestApp.csproj all      # Run all tests
 ```
 
-### 4. Run the MCP Server (TODO)
+### 4. Run the MCP Server
 
 ```bash
+# If installed as global tool
+dotnet-debug-mcp
+
+# Or run from source
 dotnet run --project src/DotNet.Debug.MCP/DotNet.Debug.MCP.csproj
+
+# The server will listen on stdin/stdout for MCP protocol messages
 ```
 
 ## Test Application
@@ -250,9 +283,9 @@ await client.DisconnectAsync(terminateDebuggee: true);
 client.Dispose();
 ```
 
-## MCP Tools (TODO - Phase 2)
+## MCP Tools
 
-Once the MCP server is implemented, the following tools will be available:
+The MCP server provides the following debugging tools:
 
 ### `debug_start`
 Start a debugging session for a .NET application.
@@ -334,11 +367,14 @@ Get the current call stack.
 - [x] DAP client implementation
 - [x] Documentation
 
-### 🚧 Phase 2: MCP Server (In Progress)
-- [ ] MCP server skeleton
-- [ ] MCP tool implementations
-- [ ] Integration with DAP client
-- [ ] Basic debugging workflow
+### ✅ Phase 2: MCP Server (Completed)
+- [x] MCP server skeleton
+- [x] MCP protocol handler (JSON-RPC over stdio)
+- [x] Session management
+- [x] 10 debugging tools implemented
+- [x] End-to-end debugging workflow
+- [x] .NET global tool packaging
+- [x] Example debugging session
 
 ### 📋 Phase 3: Advanced Features (Planned)
 - [ ] Conditional breakpoints
@@ -385,9 +421,21 @@ dotnet run --project src/DotNet.Debug.DAP.Tests/DotNet.Debug.DAP.Tests.csproj
 }
 ```
 
-## Usage with Claude Desktop (TODO)
+## Usage with Claude Desktop
 
-Add to your Claude Desktop MCP configuration:
+Add to your Claude Desktop MCP configuration (`~/Library/Application Support/Claude/claude_desktop_config.json` on macOS):
+
+```json
+{
+  "mcpServers": {
+    "dotnet-debug": {
+      "command": "dotnet-debug-mcp"
+    }
+  }
+}
+```
+
+Or if running from source:
 
 ```json
 {
@@ -403,6 +451,21 @@ Add to your Claude Desktop MCP configuration:
   }
 }
 ```
+
+**Usage Example:**
+
+Once configured, you can ask Claude to debug your .NET applications:
+
+> "Debug the TestApp and find why the sum calculation is returning 14 instead of 15"
+
+Claude will:
+1. Start a debugging session
+2. Set strategic breakpoints
+3. Inspect variables and execution flow
+4. Identify the root cause
+5. Propose a fix
+
+See [EXAMPLE_SESSION.md](./EXAMPLE_SESSION.md) for a complete debugging workflow example.
 
 ## Contributing
 
@@ -435,10 +498,18 @@ MIT License - See LICENSE file for details
 
 ---
 
-**Status:** Phase 1 Complete - DAP Client Implemented ✅
+**Status:** Phase 2 Complete - MCP Server Fully Functional ✅
 
-**Next Steps:**
-1. Implement MCP server and tools
-2. Create end-to-end debugging workflow
-3. Add Docker support for easy deployment
-4. Build example debugging scenarios
+**What Works:**
+- ✅ Complete MCP server with 10 debugging tools
+- ✅ Full debugging workflow (start, breakpoint, inspect, evaluate, stop)
+- ✅ Installable as .NET global tool (`dotnet-debug-mcp`)
+- ✅ Ready for Claude Desktop integration
+- ✅ Example debugging scenarios included
+
+**Next Steps (Phase 3):**
+1. Conditional breakpoints and exception handling
+2. Multi-threaded debugging support
+3. Watch expressions and data breakpoints
+4. Hot reload integration
+5. Performance profiling capabilities
